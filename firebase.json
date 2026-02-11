@@ -1,0 +1,39 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "pomodoro-timer-kawakita-202602",
+          "appId": "1:829045167829:android:e5290fe23fa7e05dc8745c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "pomodoro-timer-kawakita-202602",
+          "configurations": {
+            "android": "1:829045167829:android:e5290fe23fa7e05dc8745c",
+            "ios": "1:829045167829:ios:377e189b9176044fc8745c",
+            "macos": "1:829045167829:ios:d566a8015cfbde5ac8745c",
+            "web": "1:829045167829:web:bcfff63b98f49abec8745c",
+            "windows": "1:829045167829:web:8ed39a965ff2637bc8745c"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

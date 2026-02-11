@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "829045167829",
+    "project_id": "pomodoro-timer-kawakita-202602",
+    "storage_bucket": "pomodoro-timer-kawakita-202602.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829045167829:android:e5290fe23fa7e05dc8745c",
+        "android_client_info": {
+          "package_name": "com.example.pomodoro_timer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWwxr57f3z6NQMvOb_kLD9383wYq4P2EQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

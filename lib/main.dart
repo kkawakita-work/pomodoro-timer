@@ -108,9 +108,13 @@ class HomeScreen extends StatelessWidget {
     final statusColor = isFocus ? CupertinoColors.activeGreen : CupertinoColors.systemIndigo;
     
     // Calculate progress (0.0 to 1.0)
-    // "Clockwise progress": Starts at 0 (top) and fills to 1.0 (full circle)
+    // Calculate progress (0.0 to 1.0)
+    // Focus: Starts full (1.0) and empties to 0.0
+    // Break: Starts empty (0.0) and fills to 1.0
     final totalDuration = isFocus ? TimerService.focusDuration : TimerService.breakDuration;
-    final progress = 1.0 - (timerService.remainingSeconds / totalDuration);
+    final progress = isFocus 
+        ? timerService.remainingSeconds / totalDuration
+        : 1.0 - (timerService.remainingSeconds / totalDuration);
 
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.black,

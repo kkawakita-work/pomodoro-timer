@@ -105,15 +105,19 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final timerService = Provider.of<TimerService>(context);
     final isFocus = timerService.isFocusMode;
-    // iOS Colors for status
     final statusColor = isFocus ? CupertinoColors.activeGreen : CupertinoColors.systemIndigo;
+    
+    // Calculate progress (0.0 to 1.0)
+    // "Clockwise progress": Starts at 0 (top) and fills to 1.0 (full circle)
+    final totalDuration = isFocus ? TimerService.focusDuration : TimerService.breakDuration;
+    final progress = 1.0 - (timerService.remainingSeconds / totalDuration);
 
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.black,
       child: SafeArea(
         child: Column(
           children: [
-            const Spacer(),
+            const SizedBox(height: 20),
             // Status Indicator (Subtle pill at top)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -142,52 +146,62 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 40),
-            // Timer Display
-            Text(
-              timerService.formattedTime,
-              style: const TextStyle(
-                fontSize: 100, // Slightly smaller to ensure fit
-                fontWeight: FontWeight.w100, // Ultra thin iOS style
-                fontFeatures: [FontFeature.tabularFigures()], 
-                color: CupertinoColors.white,
-                fontFamily: '.SF Pro Display', // San Francisco (iOS default usually) or fallback
+            
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: CustomPaint(
+                      painter: CircularTimerPainter(
+                        progress: progress,
+                        color: statusColor,
+                        backgroundColor: const Color(0xFF1C1C1E), // Dark gray for track
+                      ),
+                      child: Center(
+                        child: Text(
+                          timerService.formattedTime,
+                          style: const TextStyle(
+                            fontSize: 80, 
+                            fontWeight: FontWeight.w200, 
+                            fontFeatures: [FontFeature.tabularFigures()], 
+                            color: CupertinoColors.white,
+                            fontFamily: '.SF Pro Display', 
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-            const Spacer(),
-            // Controls - iOS Timer Style
+            
+            // Controls
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Reset Button (Left)
+                  // Reset Button
                   _CupertinoTimerButton(
                     label: 'Reset',
-                    textColor: CupertinoColors.systemGrey, // Light Grey Text
-                    backgroundColor: const Color(0xFF333333), // Dark Grey BG
+                    icon: CupertinoIcons.arrow_counterclockwise,
+                    color: CupertinoColors.systemGrey,
                     onPressed: timerService.resetTimer,
                   ),
                   
-                  // Start/Stop Button (Right)
-                  if (!timerService.isRunning)
-                    _CupertinoTimerButton(
-                      label: 'Start',
-                      textColor: const Color(0xFF4CD964), // Bright Green Text
-                      backgroundColor: const Color(0xFF1B381F), // Dark Green BG
-                      onPressed: timerService.startTimer,
-                    )
-                  else
-                    _CupertinoTimerButton(
-                      label: 'Stop',
-                      textColor: const Color(0xFFFF3B30), // Bright Red Text
-                      backgroundColor: const Color(0xFF3B1716), // Dark Red BG
-                      onPressed: timerService.stopTimer,
-                    ),
+                  // Start/Stop Button
+                  _CupertinoTimerButton(
+                    label: timerService.isRunning ? 'Stop' : 'Start',
+                    icon: timerService.isRunning ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
+                    color: timerService.isRunning ? const Color(0xFFFF3B30) : const Color(0xFF4CD964), // Red : Green
+                    onPressed: timerService.isRunning ? timerService.stopTimer : timerService.startTimer,
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 80),
+            const SizedBox(height: 60),
           ],
         ),
       ),
@@ -195,52 +209,100 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+class CircularTimerPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color backgroundColor;
+
+  CircularTimerPainter({
+    required this.progress,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2) - 10; // Padding for stroke
+    const strokeWidth = 15.0;
+
+    // Draw background circle
+    final backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    // Draw progress arc
+    final progressPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    // Start at -90 degrees (12 o'clock)
+    // Sweep matching progress * 2*pi
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -3.14159 / 2, // -pi/2
+      2 * 3.14159 * progress,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CircularTimerPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+           oldDelegate.color != color ||
+           oldDelegate.backgroundColor != backgroundColor;
+  }
+}
+
 class _CupertinoTimerButton extends StatelessWidget {
   final String label;
-  final Color textColor;
-  final Color backgroundColor;
+  final IconData icon;
+  final Color color;
   final VoidCallback onPressed;
 
   const _CupertinoTimerButton({
     required this.label,
-    required this.textColor,
-    required this.backgroundColor,
+    required this.icon,
+    required this.color,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    // iOS Timer buttons are huge circles (~80px diameter)
-    // We use a Container with GestureDetector for custom touch feel
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
-          // Inner circle border effect (sometimes seen) or just clean
-          border: Border.all(
-            color: backgroundColor, // Match BG for cleaner look, or slight contrast
-            width: 2,
-          ),
-        ),
-        child: Container(
-             decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: CupertinoColors.black, width: 2), // The "double circle" effect
-             ),
-             alignment: Alignment.center,
-             child: Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      onPressed: onPressed,
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
             ),
-        ),
+            child: Icon(
+              icon,
+              size: 32,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,6 +3,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+class AppLocalizations {
+  static const Map<String, String> _ja = {
+    'focus': '集中',
+    'break': '休憩',
+    'reset': 'リセット',
+    'start': '開始',
+    'stop': '停止',
+    'settings': '設定',
+    'settings_message': '集中時間と休憩時間を設定します',
+    'focus_duration': '集中時間',
+    'break_duration': '休憩時間',
+    'cancel': 'キャンセル',
+    'done': '完了',
+  };
+
+  static String get(String key) => _ja[key] ?? key;
+}
 
 void main() {
   runApp(
@@ -26,6 +45,15 @@ class PomodoroApp extends StatelessWidget {
         scaffoldBackgroundColor: CupertinoColors.black,
         primaryColor: CupertinoColors.white,
       ),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('ja', 'JP'),
+      ],
+      locale: Locale('ja', 'JP'),
       home: HomeScreen(),
     );
   }
@@ -165,7 +193,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          isFocus ? 'FOCUS' : 'BREAK',
+                          isFocus ? AppLocalizations.get('focus') : AppLocalizations.get('break'),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -224,7 +252,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // Reset Button
                   _CupertinoTimerButton(
-                    label: 'Reset',
+                    label: AppLocalizations.get('reset'),
                     icon: CupertinoIcons.arrow_counterclockwise,
                     color: CupertinoColors.systemGrey,
                     onPressed: timerService.resetTimer,
@@ -232,7 +260,7 @@ class HomeScreen extends StatelessWidget {
                   
                   // Start/Stop Button
                   _CupertinoTimerButton(
-                    label: timerService.isRunning ? 'Stop' : 'Start',
+                    label: timerService.isRunning ? AppLocalizations.get('stop') : AppLocalizations.get('start'),
                     icon: timerService.isRunning ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
                     color: timerService.isRunning ? const Color(0xFFFF3B30) : const Color(0xFF4CD964), // Red : Green
                     onPressed: timerService.isRunning ? timerService.stopTimer : timerService.startTimer,
@@ -251,18 +279,18 @@ class HomeScreen extends StatelessWidget {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('Settings'),
-        message: const Text('Set durations for focus and break sessions'),
+        title: Text(AppLocalizations.get('settings')),
+        message: Text(AppLocalizations.get('settings_message')),
         actions: [
           CupertinoActionSheetAction(
-            child: const Text('Focus Duration'),
+            child: Text(AppLocalizations.get('focus_duration')),
             onPressed: () {
               Navigator.pop(context);
               _showDurationPicker(context, timerService, true);
             },
           ),
           CupertinoActionSheetAction(
-            child: const Text('Break Duration'),
+            child: Text(AppLocalizations.get('break_duration')),
             onPressed: () {
               Navigator.pop(context);
               _showDurationPicker(context, timerService, false);
@@ -271,7 +299,7 @@ class HomeScreen extends StatelessWidget {
         ],
         cancelButton: CupertinoActionSheetAction(
           isDefaultAction: true,
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.get('cancel')),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -301,7 +329,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             CupertinoButton(
-              child: const Text('Done'),
+              child: Text(AppLocalizations.get('done')),
               onPressed: () => Navigator.pop(context),
             ),
           ],

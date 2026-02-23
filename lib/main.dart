@@ -32,8 +32,8 @@ class PomodoroApp extends StatelessWidget {
 }
 
 class TimerService extends ChangeNotifier {
-  static const int focusDuration = 1 * 60;
-  static const int breakDuration = 1 * 60;
+  static const int focusDuration = 30;
+  static const int breakDuration = 30;
 
   int _remainingSeconds = focusDuration;
   bool _isRunning = false;

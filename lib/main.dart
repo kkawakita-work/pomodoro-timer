@@ -32,11 +32,18 @@ class PomodoroApp extends StatelessWidget {
 }
 
 class TimerService extends ChangeNotifier {
-  static const int focusDuration = 30;
-  static const int breakDuration = 30;
+  int _focusDuration = 1500; // 25 minutes
+  int _breakDuration = 300;  // 5 minutes
 
-  int _remainingSeconds = focusDuration;
+  int get focusDuration => _focusDuration;
+  int get breakDuration => _breakDuration;
+
+  late int _remainingSeconds;
   bool _isRunning = false;
+
+  TimerService() {
+    _remainingSeconds = _focusDuration;
+  }
   bool _isFocusMode = true;
   Timer? _timer;
 
@@ -65,9 +72,25 @@ class TimerService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setFocusDuration(int seconds) {
+    _focusDuration = seconds;
+    if (_isFocusMode && !_isRunning) {
+      _remainingSeconds = _focusDuration;
+    }
+    notifyListeners();
+  }
+
+  void setBreakDuration(int seconds) {
+    _breakDuration = seconds;
+    if (!_isFocusMode && !_isRunning) {
+      _remainingSeconds = _breakDuration;
+    }
+    notifyListeners();
+  }
+
   void resetTimer() {
     stopTimer();
-    _remainingSeconds = _isFocusMode ? focusDuration : breakDuration;
+    _remainingSeconds = _isFocusMode ? _focusDuration : _breakDuration;
     notifyListeners();
   }
 
@@ -80,7 +103,7 @@ class TimerService extends ChangeNotifier {
 
   void _switchMode() {
     _isFocusMode = !_isFocusMode;
-    _remainingSeconds = _isFocusMode ? focusDuration : breakDuration;
+    _remainingSeconds = _isFocusMode ? _focusDuration : _breakDuration;
     notifyListeners();
   }
 
@@ -111,7 +134,7 @@ class HomeScreen extends StatelessWidget {
     // Calculate progress (0.0 to 1.0)
     // Focus: Starts full (1.0) and empties to 0.0
     // Break: Starts empty (0.0) and fills to 1.0
-    final totalDuration = isFocus ? TimerService.focusDuration : TimerService.breakDuration;
+    final totalDuration = isFocus ? timerService.focusDuration : timerService.breakDuration;
     final progress = isFocus 
         ? timerService.remainingSeconds / totalDuration
         : 1.0 - (timerService.remainingSeconds / totalDuration);
@@ -121,31 +144,44 @@ class HomeScreen extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            // Status Indicator (Subtle pill at top)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                   Icon(
-                    isFocus ? CupertinoIcons.bolt_fill : CupertinoIcons.moon_fill, 
-                    size: 14, 
-                    color: statusColor
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    isFocus ? 'FOCUS' : 'BREAK',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                      letterSpacing: 1,
+                  const SizedBox(width: 44), // Spacer to balance settings button
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
                     ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         Icon(
+                          isFocus ? CupertinoIcons.bolt_fill : CupertinoIcons.moon_fill,
+                          size: 14,
+                          color: statusColor
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          isFocus ? 'FOCUS' : 'BREAK',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: const Icon(CupertinoIcons.settings, color: CupertinoColors.systemGrey),
+                    onPressed: () => _showSettings(context, timerService),
                   ),
                 ],
               ),
@@ -206,6 +242,69 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 60),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSettings(BuildContext context, TimerService timerService) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Settings'),
+        message: const Text('Set durations for focus and break sessions'),
+        actions: [
+          CupertinoActionSheetAction(
+            child: const Text('Focus Duration'),
+            onPressed: () {
+              Navigator.pop(context);
+              _showDurationPicker(context, timerService, true);
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Break Duration'),
+            onPressed: () {
+              Navigator.pop(context);
+              _showDurationPicker(context, timerService, false);
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
+  void _showDurationPicker(BuildContext context, TimerService timerService, bool isFocus) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 200,
+              child: CupertinoTimerPicker(
+                mode: CupertinoTimerPickerMode.ms,
+                initialTimerDuration: Duration(seconds: isFocus ? timerService.focusDuration : timerService.breakDuration),
+                onTimerDurationChanged: (duration) {
+                  if (isFocus) {
+                    timerService.setFocusDuration(duration.inSeconds);
+                  } else {
+                    timerService.setBreakDuration(duration.inSeconds);
+                  }
+                },
+              ),
+            ),
+            CupertinoButton(
+              child: const Text('Done'),
+              onPressed: () => Navigator.pop(context),
+            ),
           ],
         ),
       ),

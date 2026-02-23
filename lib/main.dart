@@ -90,7 +90,8 @@ class TimerService extends ChangeNotifier {
 
   void resetTimer() {
     stopTimer();
-    _remainingSeconds = _isFocusMode ? _focusDuration : _breakDuration;
+    _isFocusMode = true;
+    _remainingSeconds = _focusDuration;
     notifyListeners();
   }
 

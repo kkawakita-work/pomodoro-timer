@@ -52,8 +52,8 @@ class PomodoroApp extends StatelessWidget {
       ],
       supportedLocales: [
         Locale('ja', 'JP'),
+        Locale('en', 'US'),
       ],
-      locale: Locale('ja', 'JP'),
       home: HomeScreen(),
     );
   }
@@ -193,7 +193,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          isFocus ? AppLocalizations.get('focus') : AppLocalizations.get('break'),
+                          isFocus ? 'FOCUS' : 'BREAK',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -252,7 +252,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   // Reset Button
                   _CupertinoTimerButton(
-                    label: AppLocalizations.get('reset'),
+                    label: 'Reset',
                     icon: CupertinoIcons.arrow_counterclockwise,
                     color: CupertinoColors.systemGrey,
                     onPressed: timerService.resetTimer,
@@ -260,7 +260,7 @@ class HomeScreen extends StatelessWidget {
                   
                   // Start/Stop Button
                   _CupertinoTimerButton(
-                    label: timerService.isRunning ? AppLocalizations.get('stop') : AppLocalizations.get('start'),
+                    label: timerService.isRunning ? 'Stop' : 'Start',
                     icon: timerService.isRunning ? CupertinoIcons.pause_fill : CupertinoIcons.play_fill,
                     color: timerService.isRunning ? const Color(0xFFFF3B30) : const Color(0xFF4CD964), // Red : Green
                     onPressed: timerService.isRunning ? timerService.stopTimer : timerService.startTimer,
@@ -278,29 +278,33 @@ class HomeScreen extends StatelessWidget {
   void _showSettings(BuildContext context, TimerService timerService) {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text(AppLocalizations.get('settings')),
-        message: Text(AppLocalizations.get('settings_message')),
-        actions: [
-          CupertinoActionSheetAction(
-            child: Text(AppLocalizations.get('focus_duration')),
-            onPressed: () {
-              Navigator.pop(context);
-              _showDurationPicker(context, timerService, true);
-            },
+      builder: (context) => Localizations.override(
+        context: context,
+        locale: const Locale('ja', 'JP'),
+        child: CupertinoActionSheet(
+          title: Text(AppLocalizations.get('settings')),
+          message: Text(AppLocalizations.get('settings_message')),
+          actions: [
+            CupertinoActionSheetAction(
+              child: Text(AppLocalizations.get('focus_duration')),
+              onPressed: () {
+                Navigator.pop(context);
+                _showDurationPicker(context, timerService, true);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Text(AppLocalizations.get('break_duration')),
+              onPressed: () {
+                Navigator.pop(context);
+                _showDurationPicker(context, timerService, false);
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            child: Text(AppLocalizations.get('cancel')),
+            onPressed: () => Navigator.pop(context),
           ),
-          CupertinoActionSheetAction(
-            child: Text(AppLocalizations.get('break_duration')),
-            onPressed: () {
-              Navigator.pop(context);
-              _showDurationPicker(context, timerService, false);
-            },
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          child: Text(AppLocalizations.get('cancel')),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
     );
@@ -309,30 +313,34 @@ class HomeScreen extends StatelessWidget {
   void _showDurationPicker(BuildContext context, TimerService timerService, bool isFocus) {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => Container(
-        height: 300,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: Column(
-          children: [
-            SizedBox(
-              height: 200,
-              child: CupertinoTimerPicker(
-                mode: CupertinoTimerPickerMode.ms,
-                initialTimerDuration: Duration(seconds: isFocus ? timerService.focusDuration : timerService.breakDuration),
-                onTimerDurationChanged: (duration) {
-                  if (isFocus) {
-                    timerService.setFocusDuration(duration.inSeconds);
-                  } else {
-                    timerService.setBreakDuration(duration.inSeconds);
-                  }
-                },
+      builder: (context) => Localizations.override(
+        context: context,
+        locale: const Locale('ja', 'JP'),
+        child: Container(
+          height: 300,
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 200,
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.ms,
+                  initialTimerDuration: Duration(seconds: isFocus ? timerService.focusDuration : timerService.breakDuration),
+                  onTimerDurationChanged: (duration) {
+                    if (isFocus) {
+                      timerService.setFocusDuration(duration.inSeconds);
+                    } else {
+                      timerService.setBreakDuration(duration.inSeconds);
+                    }
+                  },
+                ),
               ),
-            ),
-            CupertinoButton(
-              child: Text(AppLocalizations.get('done')),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+              CupertinoButton(
+                child: Text(AppLocalizations.get('done')),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       ),
     );

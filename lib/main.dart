@@ -132,12 +132,9 @@ class HomeScreen extends StatelessWidget {
     
     // Calculate progress (0.0 to 1.0)
     // Calculate progress (0.0 to 1.0)
-    // Focus: Starts full (1.0) and empties to 0.0
-    // Break: Starts empty (0.0) and fills to 1.0
+    // Progress starts at 0.0 and fills to 1.0 for both Focus and Break
     final totalDuration = isFocus ? timerService.focusDuration : timerService.breakDuration;
-    final progress = isFocus 
-        ? timerService.remainingSeconds / totalDuration
-        : 1.0 - (timerService.remainingSeconds / totalDuration);
+    final progress = 1.0 - (timerService.remainingSeconds / totalDuration);
 
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.black,
@@ -198,6 +195,7 @@ class HomeScreen extends StatelessWidget {
                         progress: progress,
                         color: statusColor,
                         backgroundColor: const Color(0xFF1C1C1E), // Dark gray for track
+                        isFocusMode: isFocus,
                       ),
                       child: Center(
                         child: Text(
@@ -316,11 +314,13 @@ class CircularTimerPainter extends CustomPainter {
   final double progress;
   final Color color;
   final Color backgroundColor;
+  final bool isFocusMode;
 
   CircularTimerPainter({
     required this.progress,
     required this.color,
     required this.backgroundColor,
+    required this.isFocusMode,
   });
 
   @override
@@ -346,10 +346,11 @@ class CircularTimerPainter extends CustomPainter {
 
     // Start at -90 degrees (12 o'clock)
     // Sweep matching progress * 2*pi
+    // Direction depends on mode: Focus is clockwise, Break is counter-clockwise
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -3.14159 / 2, // -pi/2
-      2 * 3.14159 * progress,
+      (isFocusMode ? 1 : -1) * 2 * 3.14159 * progress,
       false,
       progressPaint,
     );
@@ -359,7 +360,8 @@ class CircularTimerPainter extends CustomPainter {
   bool shouldRepaint(covariant CircularTimerPainter oldDelegate) {
     return oldDelegate.progress != progress ||
            oldDelegate.color != color ||
-           oldDelegate.backgroundColor != backgroundColor;
+           oldDelegate.backgroundColor != backgroundColor ||
+           oldDelegate.isFocusMode != isFocusMode;
   }
 }
 

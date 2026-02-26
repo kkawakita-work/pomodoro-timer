@@ -4,6 +4,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+class AppLocalizations {
+  static const Map<String, String> _ja = {
+    'focus': '集中',
+    'break': '休憩',
+    'reset': 'リセット',
+    'start': '開始',
+    'stop': '停止',
+    'settings': '設定',
+    'settings_message': '集中時間と休憩時間を設定します',
+    'focus_duration': '集中時間',
+    'break_duration': '休憩時間',
+    'cancel': 'キャンセル',
+    'done': '完了',
+  };
+
+  static String get(String key) => _ja[key] ?? key;
+}
 
 void main() {
   runApp(
@@ -27,6 +46,15 @@ class PomodoroApp extends StatelessWidget {
         scaffoldBackgroundColor: CupertinoColors.black,
         primaryColor: CupertinoColors.white,
       ),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('ja', 'JP'),
+        Locale('en', 'US'),
+      ],
       home: HomeScreen(),
     );
   }
@@ -251,29 +279,33 @@ class HomeScreen extends StatelessWidget {
   void _showSettings(BuildContext context, TimerService timerService) {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: const Text('Settings'),
-        message: const Text('Set durations for focus and break sessions'),
-        actions: [
-          CupertinoActionSheetAction(
-            child: const Text('Focus Duration'),
-            onPressed: () {
-              Navigator.pop(context);
-              _showDurationPicker(context, timerService, true);
-            },
+      builder: (context) => Localizations.override(
+        context: context,
+        locale: const Locale('ja', 'JP'),
+        child: CupertinoActionSheet(
+          title: Text(AppLocalizations.get('settings')),
+          message: Text(AppLocalizations.get('settings_message')),
+          actions: [
+            CupertinoActionSheetAction(
+              child: Text(AppLocalizations.get('focus_duration')),
+              onPressed: () {
+                Navigator.pop(context);
+                _showDurationPicker(context, timerService, true);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Text(AppLocalizations.get('break_duration')),
+              onPressed: () {
+                Navigator.pop(context);
+                _showDurationPicker(context, timerService, false);
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            child: Text(AppLocalizations.get('cancel')),
+            onPressed: () => Navigator.pop(context),
           ),
-          CupertinoActionSheetAction(
-            child: const Text('Break Duration'),
-            onPressed: () {
-              Navigator.pop(context);
-              _showDurationPicker(context, timerService, false);
-            },
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
     );
@@ -282,30 +314,34 @@ class HomeScreen extends StatelessWidget {
   void _showDurationPicker(BuildContext context, TimerService timerService, bool isFocus) {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => Container(
-        height: 300,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: Column(
-          children: [
-            SizedBox(
-              height: 200,
-              child: CupertinoTimerPicker(
-                mode: CupertinoTimerPickerMode.ms,
-                initialTimerDuration: Duration(seconds: isFocus ? timerService.focusDuration : timerService.breakDuration),
-                onTimerDurationChanged: (duration) {
-                  if (isFocus) {
-                    timerService.setFocusDuration(duration.inSeconds);
-                  } else {
-                    timerService.setBreakDuration(duration.inSeconds);
-                  }
-                },
+      builder: (context) => Localizations.override(
+        context: context,
+        locale: const Locale('ja', 'JP'),
+        child: Container(
+          height: 300,
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 200,
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.ms,
+                  initialTimerDuration: Duration(seconds: isFocus ? timerService.focusDuration : timerService.breakDuration),
+                  onTimerDurationChanged: (duration) {
+                    if (isFocus) {
+                      timerService.setFocusDuration(duration.inSeconds);
+                    } else {
+                      timerService.setBreakDuration(duration.inSeconds);
+                    }
+                  },
+                ),
               ),
-            ),
-            CupertinoButton(
-              child: const Text('Done'),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
+              CupertinoButton(
+                child: Text(AppLocalizations.get('done')),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
         ),
       ),
     );

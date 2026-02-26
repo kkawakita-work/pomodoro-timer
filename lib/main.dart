@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -330,7 +331,96 @@ class CircularTimerPainter extends CustomPainter {
     final radius = (size.width / 2) - 10; // Padding for stroke
     const strokeWidth = 15.0;
 
-    // Draw background circle
+    // Rotation based on progress
+    final rotationAngle = (isFocusMode ? 1 : -1) * progress * 2 * math.pi;
+
+    // Draw globe background (Ocean)
+    final oceanPaint = Paint()
+      ..color = const Color(0xFF1E88E5) // Blue for ocean
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius, oceanPaint);
+
+    // Rotate landmasses and graticule
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotationAngle);
+    canvas.translate(-center.dx, -center.dy);
+
+    // Draw landmasses
+    final landPaint = Paint()
+      ..color = const Color(0xFF43A047) // Green for land
+      ..style = PaintingStyle.fill;
+
+    // Use a clip to keep landmasses inside the circle
+    canvas.save();
+    final circlePath = Path()..addOval(Rect.fromCircle(center: center, radius: radius));
+    canvas.clipPath(circlePath);
+
+    // Draw some stylized continents
+    // North America-ish
+    final landPath1 = Path()
+      ..moveTo(center.dx - radius * 0.7, center.dy - radius * 0.4)
+      ..lineTo(center.dx - radius * 0.2, center.dy - radius * 0.5)
+      ..lineTo(center.dx - radius * 0.1, center.dy - radius * 0.1)
+      ..lineTo(center.dx - radius * 0.4, center.dy + radius * 0.2)
+      ..close();
+    canvas.drawPath(landPath1, landPaint);
+
+    // South America-ish
+    final landPath2 = Path()
+      ..moveTo(center.dx - radius * 0.3, center.dy + radius * 0.1)
+      ..lineTo(center.dx - radius * 0.1, center.dy + radius * 0.2)
+      ..lineTo(center.dx - radius * 0.2, center.dy + radius * 0.7)
+      ..lineTo(center.dx - radius * 0.5, center.dy + radius * 0.3)
+      ..close();
+    canvas.drawPath(landPath2, landPaint);
+
+    // Eurasia-ish
+    final landPath3 = Path()
+      ..moveTo(center.dx + radius * 0.1, center.dy - radius * 0.6)
+      ..lineTo(center.dx + radius * 0.8, center.dy - radius * 0.5)
+      ..lineTo(center.dx + radius * 0.7, center.dy + radius * 0.1)
+      ..lineTo(center.dx + radius * 0.2, center.dy + radius * 0.2)
+      ..close();
+    canvas.drawPath(landPath3, landPaint);
+
+    // Africa-ish
+    final landPath4 = Path()
+      ..moveTo(center.dx + radius * 0.2, center.dy + radius * 0.1)
+      ..lineTo(center.dx + radius * 0.5, center.dy + radius * 0.2)
+      ..lineTo(center.dx + radius * 0.4, center.dy + radius * 0.6)
+      ..lineTo(center.dx + radius * 0.1, center.dy + radius * 0.4)
+      ..close();
+    canvas.drawPath(landPath4, landPaint);
+
+    canvas.restore();
+
+    // Draw graticule (Latitude and Longitude)
+    final graticulePaint = Paint()
+      ..color = CupertinoColors.white.withOpacity(0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Latitudes (Concentric circles)
+    for (int i = 1; i <= 3; i++) {
+      canvas.drawCircle(center, radius * (i / 4), graticulePaint);
+    }
+
+    // Longitudes (Radial lines)
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
+      canvas.drawLine(
+        center,
+        Offset(
+          center.dx + radius * math.cos(angle),
+          center.dy + radius * math.sin(angle),
+        ),
+        graticulePaint,
+      );
+    }
+    canvas.restore(); // Restore global rotation save
+
+    // Draw background track
     final backgroundPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.stroke
